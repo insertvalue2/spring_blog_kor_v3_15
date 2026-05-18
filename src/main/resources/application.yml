@@ -1,0 +1,20 @@
+spring:
+  profiles:
+    active:
+      - dev
+
+  # .env 파일을 properties 파일 형식으로 읽어라
+  # (배포 처럼 OS 환경 변수만 쓰는 환경에도 안전하게 지원)
+  #  optional 이기 때문에 .env 파일이 없어도 앱이 막히지 않습니다.
+  config:
+    import: optional:file:.env[.properties]
+
+# 초기 파리미터 설정
+# .env 파일에 설정된 변수 값이 여기에 매핑된다
+oauth:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID}
+    client-secret: ${KAKAO_CLIENT_SECRET}
+
+tenco:
+  key: ${TENCO_KEY}

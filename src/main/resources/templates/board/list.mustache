@@ -1,0 +1,60 @@
+{{> layout/header}}
+<div class="container p-5 flex-grow-1">
+    <!-- 검색 폼 START (GET )  -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form action="/board/list" method="get" class="row g-3">
+                <!--  부트스트랩5 12 등분으로 화면을 분배할 수 있음 -->
+                <div class="col-md-8">
+                    <input type="text" class="form-control"
+                           name="keyword" placeholder="제목 또는 내용으로 검색..." value="{{keyword}}">
+                </div>
+                <div class="col-md-2">
+                    <input type="hidden" name="page" value="1">
+                    <input type="hidden" name="size" value="{{boardPage.size}}">
+                    <button type="submit" class="btn btn-primary w-100">검색</button>
+                </div>
+                <div class="col-md-2">
+                    <a href="/board/list" class="btn btn-secondary w-100">초기화</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!--  검색 폼 END   -->
+
+    <!-- 게시글 리스트     -->
+    {{#boardPage.list}}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4 class="card-title mb-3">{{title}}</h4>
+                <!--  머스태치 문법은 getter 메서드를 가지고 오고 get은 탈락 가능 -->
+                <div> 작성자 : {{username}}  | 작성일 : {{createdAt}}</div>
+                <a href="/board/{{id}}" class="btn btn-primary">상세보기</a>
+            </div>
+        </div>
+    {{/boardPage.list}}
+
+    <!-- 페이지 네비게이션  시작 -->
+    <ul class="pagination d-flex justify-content-center">
+        <!--  이전 페이지 버튼 (첫 페이지 disabled 처리)       -->
+        <li class="page-item {{#boardPage.first}} disabled {{/boardPage.first}} ">
+            <a class="page-link " href="/?page={{boardPage.prevPage}}&size={{boardPage.size}}">Previous</a>
+        </li>
+
+        <!--  페이지 번호 윈도우 (편재 페이지 기준 앞뒤 2페이지 최대 5개   -->
+        {{#boardPage.pageItemNumbers}}
+        <li class="page-item {{#active}} active {{/active}}">
+            <a class="page-link" href="/?page={{number}}&size={{boardPage.size}}">{{number}}</a>
+        </li>
+        {{/boardPage.pageItemNumbers}}
+
+
+        <li class="page-item {{#boardPage.last}} disabled {{/boardPage.last}}  ">
+            <a class="page-link" href="/?page={{boardPage.nextPage}}&size={{boardPage.size}}">Next</a>
+        </li>
+    </ul>
+    <!-- 페이지 네비게이션  종료 -->
+
+</div>
+
+{{> layout/footer}}

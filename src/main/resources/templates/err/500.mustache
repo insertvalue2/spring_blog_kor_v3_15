@@ -1,0 +1,18 @@
+{{> layout/header}}
+<div class="container p-5 flex-grow-1">
+    <h1>Internal Server Error 500</h1>
+    <hr>
+    {{^msg}}
+        <h4>서버관리자에게 문의</h4>
+    {{/msg}}
+    {{#msg}}
+        <h4>{{msg}}</h4>
+    {{/msg}}
+
+    <div class="mb-3">
+        <a href="/" class="btn btn-primary">메인 페이지</a>
+        <a href="javascript:location.reload()">새로고침</a>
+    </div>
+</div>
+{{> layout/footer}}
+

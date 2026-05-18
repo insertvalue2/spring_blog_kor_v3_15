@@ -1,0 +1,76 @@
+server:
+  servlet:
+    session:
+      # [핵심 설정] URL에 jsessionid가 노출되는 것을 완벽하게 차단합니다.
+      tracking-modes: cookie
+    encoding:
+      charset: utf-8
+      force: true
+  # 파일 업로드 설정
+    multipart:
+      enabled: true  # 파일 업로드 활성화
+      max-file-size: 50MB  # 단일 파일 최대 크기 설정 (1MB)
+      max-request-size: 100MB # 전체 요청(Request) 최대 크기 설정
+  port: 8080
+
+
+
+logging:
+  level:
+    root: INFO #모든 라이브러리는 INFO 이상만 출력
+    com.tenco: DEBUG # 내 프로젝트는 DEBUG 이상 모두 출력
+
+spring:
+  mustache:
+    servlet:
+      # 머스태치 템플릿 엔진에서 request 객체와 세션 객체에 접근할 수 있도록 허용하는 설정 추가
+      expose-session-attributes: false
+      expose-request-attributes: true
+
+
+  #데이터베이스 연결 설정 (MySQL)
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/myblog?serverTimezone=Asia/Seoul
+    username: root
+    password: root
+  #    driver-class-name: org.h2.Driver
+  #    url: jdbc:h2:mem:test
+  #    username: sa
+  #    password:
+  h2:
+    console:
+      enabled: true
+
+  #      초기 데이터 설정
+  # SQL 초기화 설정
+  sql:
+    init:
+      mode: always  # 외부 DB(MySQL)에서도 실행되도록 설정
+      #mode: never  # 절대 실행 안됨
+      data-locations:
+        - classpath:db/data.sql
+
+  jpa:
+    # Open Session In View -> false 설정
+    # true (기본 값) -> 뷰 렌더링까지 DB 세션 유지 됨(LAZY 로딩 가능)
+    # false : 트랜잭션 종료시 DB 세션 종료 ( Controller, View LAZY 로딩 불가)
+    # false 사용시 Service 필요한 데이터를 모두 조회하고 응답시 DTO 설계 방식으로 처리 한다.
+    open-in-view: false
+    hibernate:
+      # create 애플리케이션 시작시 테이블 새로 생성
+      # 기존 데이터는 모드 삭제됨 (개발용)
+      ddl-auto: create
+    #SQL 쿼리를 콘솔에 출력 (개발용)
+    show-sql: true
+    properties:
+      hibernate:
+        # SQL 쿼리를 보기 좋게 포맷팅
+        format_sql: true
+        # N + 1 문제를 완화 하기위한 완충 장치 설정
+        # 기본 WHERE 절에서 in 절(in 쿼리로 변경 해준다)
+        default_batch_fetch_size: 100
+    # data.sql 파일을 하이버네티트 초기화 이후에 실행
+
+    # data.sql 파일을 Hibernate 초기화 이후에 실행
+    defer-datasource-initialization: true

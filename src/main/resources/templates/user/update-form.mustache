@@ -1,0 +1,62 @@
+{{> layout/header}}
+<div class="container p-5 flex-grow-1">
+    <div class="card">
+        <div class="card-header"><b>회원정보수정</b></div>
+        <div class="card-body">
+
+            <!--  프로필 이미지  start  -->
+            <div class="text-center mb-4">
+                {{#user.profileImage}}
+                    <img class="rounded-circle" src="{{user.profilePath}}" alt="프로필이미지"
+                         style="width:200px; height:200px"/>
+                   {{#user.local}}
+                    <div class="mt-2">
+                        <form action="/user/profile-image/delete" method="post">
+                            <button type="submit" class="btn btn-sm btn-danger"
+                                    onclick="return confirm('프로필 사진을 삭제할까요?')">프로필 사진 삭제</button>
+                        </form>
+                    </div>
+                   {{/user.local}}
+                {{/user.profileImage}}
+                {{^user.profileImage}}
+                    <div class="rounded-circle bg-secondary d-inline-flex
+                                justify-content-center align-items-center border"
+                         style="width:200px; height:200px;">
+                        <span>프로필 사진 없음</span>
+                    </div>
+                {{/user.profileImage}}
+            </div>
+            <!--  프로필 이미지   end -->
+
+            <!--  이미지 업로드 시 반드시   multipart/form-data 선언   -->
+            <form action="/user/update" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <input type="text" class="form-control" name="username" value="{{user.username}}" disabled>
+                </div>
+
+                {{#user.local}}
+                    <div class="mb-3">
+                        <input type="password" class="form-control" name="password" value="" >
+                    </div>
+                    {{#user.email}}
+                    <div class="mb-3">
+                        <input type="text" class="form-control" name="email" value="{{user.email}}" disabled>
+                    </div>
+                    {{/user.email}}
+
+                    <!--  프로필 이미지 등록 필드(선택 사항)  -->
+                    <div class="mb-3">
+                        <label for="profileImage" class="form-label">프로필 사진(선택사항)</label>
+                        <input type="file" id="profileImage" class="form-control" name="profileImage" accept="image/*"  >
+                        <small class="form-text text-muted">이미지 파일만 업로드 가능합니다(JPG, PNG, GIF 등)</small>
+                        <small class="form-text text-muted d-block mt-1">⭐ 프로필 사진을 등록하지 않아도 회원 가입 가능 </small>
+                    </div>
+
+                {{/user.local}}
+                <button class="btn btn-primary form-control">회원정보수정</button>
+            </form>
+        </div>
+    </div>
+</div>
+{{> layout/footer}}
+

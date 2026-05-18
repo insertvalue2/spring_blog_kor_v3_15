@@ -1,0 +1,29 @@
+{{> layout/header}}
+<div class="container p-5 flex-grow-1">
+    <div class="card">
+        <div class="card-header"><b>로그인을 해주세요</b></div>
+        <div class="card-body">
+            <!-- 자원에 요청은 GET 방식이 맞음
+                  예외적으로 로그인 요청은 Post 처리해주어야 한다.
+                  보안적인 이슈 때문.
+            -->
+            <form action="/login" method="post">
+                <div class="mb-3">
+                    <input type="text" class="form-control" placeholder="enter username" name="username" value="ssar">
+                </div>
+                <div class="mb-3">
+                    <input type="password" class="form-control" placeholder="enter password" name="password" value="1234">
+                </div>
+                <button type="submit" class="btn btn-primary form-control">로그인</button>
+            </form>
+
+            <div class="mt-3">
+                <a href="https://kauth.kakao.com/oauth/authorize?client_id=12c733baf61c27619fda39ca3e5df059&redirect_uri=http://localhost:8080/kakao-redirect&response_type=code">
+                    <img src="/img/kakao_login.png" alt="소셜로그인">
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{{> layout/footer}}
+
