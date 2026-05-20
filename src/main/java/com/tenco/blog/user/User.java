@@ -25,6 +25,10 @@ public class User {
     private String username;
 
     private String password;
+
+    // 이메일 유니크 제약 — 동일 이메일 중복 가입 방지 (DB 레벨 안전망)
+    // 애플리케이션 체크(UserService) 와 함께 이중 방어 구조.
+    @Column(unique = true)
     private String email;
     // 엔티티가 영속화 될 때 자동으로 현재 시간을 주입해라 pc -> db
     @CreationTimestamp

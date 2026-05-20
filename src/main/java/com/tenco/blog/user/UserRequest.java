@@ -90,4 +90,28 @@ public class UserRequest {
         }
     }
 
+    /**
+     * 이메일 인증용 DTO
+     *
+     * 같은 DTO 를 두 가지 용도로 사용한다.
+     *  - 발송 요청: email 만 사용 (code 는 null)
+     *  - 확인 요청: email + code 둘 다 사용
+     *
+     * AJAX 요청의 JSON 바디를 매핑받기 위한 그릇.
+     */
+    @Data
+    public static class EmailCheckDTO {
+        private String email;  // 이메일 주소
+        private String code;   // 인증번호 (확인 시에만 사용)
+
+        public void validate() {
+            if (email == null || email.trim().isEmpty()) {
+                throw new IllegalArgumentException("이메일을 입력해주세요");
+            }
+            if (!email.contains("@")) {
+                throw new IllegalArgumentException("올바른 이메일 형식이 아닙니다");
+            }
+        }
+    }
+
 }

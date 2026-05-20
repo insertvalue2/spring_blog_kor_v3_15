@@ -5,6 +5,7 @@ import com.tenco.blog._core.errors.Exception403;
 import com.tenco.blog._core.errors.Exception404;
 import com.tenco.blog._core.errors.Exception500;
 import com.tenco.blog._core.util.FileUtil;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +36,9 @@ public class UserService {
     // DI
     private final PasswordEncoder passwordEncoder;
 
+    // 세션 — 이메일 인증 "verified_email" 도장 확인용 (MailService 가 찍어둔 도장)
+    private final HttpSession session;
+
     // 초기 파미미터 값을 가져 오는 방법
     @Value("${oauth.kakao.client-id}")
     private String kakaoClientId;
@@ -54,11 +58,37 @@ public class UserService {
     @Transactional
     public User 회원가입(UserRequest.JoinDTO joinDTO) {
         log.info("회원가입 서비스 시작");
+
+        // [핵심] 이메일 인증 도장 확인
+        //
+        // 클라이언트 측 검증(브라우저 JS, hidden 필드) 은 우회 가능하다.
+        //   - 개발자 도구로 hidden 값을 변조
+        //   - JavaScript 비활성화 → onsubmit 자체가 실행 안 됨
+        //   - Postman / curl 로 /join 에 직접 POST
+        // 따라서 "정말 이메일 인증을 했는가?" 는 반드시 서버 세션의 도장으로 확인한다.
+        //
+        // 도장의 출처: MailService.인증번호확인() 이 성공 시 세션에 찍어 둔
+        //              "verified_email" = 인증된 이메일 주소.
+        //
+        // 검증 규칙: 도장이 없거나, 도장의 이메일과 가입 폼의 이메일이 다르면 거부.
+        String verifiedEmail = (String) session.getAttribute("verified_email");
+        if (verifiedEmail == null || !verifiedEmail.equals(joinDTO.getEmail())) {
+            throw new Exception400("이메일 인증을 먼저 완료해주세요");
+        }
+
         // 회원가입시 사용자 이름 중복 체크
         userRepository.findByUsername(joinDTO.getUsername()).ifPresent(user -> {
             log.warn("회원가입 실패 - 중복된 사용자명 : {}", user.getUsername());
             throw new Exception400("이미 존재하는 사용자 이름입니다");
         });
+
+        // 이메일 중복 체크 (애플리케이션 레벨 친절한 에러 메시지용)
+        // DB 의 unique 제약과 함께 이중 방어 — Defense in Depth.
+        userRepository.findByEmail(joinDTO.getEmail()).ifPresent(user -> {
+            log.warn("회원가입 실패 - 중복된 이메일 : {}", user.getEmail());
+            throw new Exception400("이미 등록된 이메일입니다");
+        });
+
         // 프로필 이미지 저장 기능 구현 (선택 사항 임)
         String profileImageFilename = null;
         if(joinDTO.getProfileImage() != null && joinDTO.getProfileImage().isEmpty() == false) {
@@ -81,7 +111,14 @@ public class UserService {
         System.out.println("hashPwd "  + hashPwd);
 
         user.setPassword(hashPwd);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // 이메일 인증 도장 제거 (일회용 — 재사용 방지)
+        //  - 같은 도장으로 또 다른 계정을 만드는 것을 막는다.
+        //  - 다음 회원가입은 다시 이메일 인증부터 시작해야 한다.
+        session.removeAttribute("verified_email");
+
+        return savedUser;
     }
 
 

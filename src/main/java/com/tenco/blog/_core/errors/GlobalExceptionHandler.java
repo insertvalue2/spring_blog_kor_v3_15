@@ -19,14 +19,29 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 // @RestControllerAdvice // 에러를 데이터로 반환할 때 사용
 public class GlobalExceptionHandler {
 
+    /**
+     * 400 Bad Request — alert 창 + 이전 페이지로 돌아가기
+     *
+     * 이전에는 err/400 페이지로 이동했지만, 회원가입 / 이메일 인증 같은 폼 흐름에서는
+     * "alert 띄우고 이전 페이지로 돌아가서 다시 입력" 흐름이 사용자 친화적이다.
+     *
+     * 작은따옴표 이스케이프: 에러 메시지에 ' 가 포함되어도 JS 구문 오류 안 나도록 \\' 로 변환.
+     */
     @ExceptionHandler(Exception400.class)
+    @ResponseBody
     public String ex400(Exception400 e, HttpServletRequest request) {
         log.warn("=== 400 Bad Request 에러 발생 ===");
         log.warn("요청 URL: {}", request.getRequestURL());
         log.warn("에러메시지: {}", e.getMessage());
 
-        request.setAttribute("msg", e.getMessage());
-        return "err/400";
+        String message = e.getMessage() != null ? e.getMessage() : "잘못된 요청입니다";
+        String escapedMessage = message.replace("'", "\\'");
+        return """
+            <script>
+                alert('%s');
+                history.back();
+            </script>
+            """.formatted(escapedMessage);
     }
 
 //    @ExceptionHandler(Exception401.class)
@@ -111,8 +126,16 @@ public class GlobalExceptionHandler {
         return "err/500";
     }
 
-    // 데이터베이스 관련 및 제약조건 위반 오류 처리
+    /**
+     * 데이터베이스 제약조건 위반 오류 처리
+     *
+     * 동시 가입 같은 경쟁 상황에서 발생할 수 있다 — 거의 동시에 같은 이메일로 가입 시도하면
+     * 애플리케이션의 findByEmail 중복 체크는 통과되지만 DB 의 unique 제약에서 막힌다.
+     *
+     * 친절한 alert 로 변경 후 이전 페이지로 돌아가서 재입력하도록 유도.
+     */
     @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseBody
     public String handleDataIntegrityViolationException(DataIntegrityViolationException e,
                                                         HttpServletRequest request) {
         log.warn("=== 데이터 베이스 제약 조건 위반 오류 발생 ===");
@@ -120,14 +143,25 @@ public class GlobalExceptionHandler {
         log.warn("에러메시지: {}", e.getMessage());
 
         String errorMessage = e.getMessage();
-        if (errorMessage != null && errorMessage.contains("FOREIGN KEY")) {
-            request.setAttribute("msg", "관련된 데이터가 있어 삭제할 수 없습니다");
-        } else {
-            // 실제로는 다른 내용으로 에러페이지에 내려 줘야 함.
-            request.setAttribute("msg", "데이터베이스 제약조건 위한:" + e.getMessage());
-        }
-        return "err/500";
+        String userMessage;
 
+        if (errorMessage != null && errorMessage.contains("email")) {
+            userMessage = "이미 등록된 이메일입니다";
+        } else if (errorMessage != null && errorMessage.contains("username")) {
+            userMessage = "이미 존재하는 사용자 이름입니다";
+        } else if (errorMessage != null && errorMessage.contains("FOREIGN KEY")) {
+            userMessage = "관련된 데이터가 있어 삭제할 수 없습니다";
+        } else {
+            userMessage = "데이터베이스 제약조건 위반이 발생했습니다";
+        }
+
+        String escapedMessage = userMessage.replace("'", "\\'");
+        return """
+            <script>
+                alert('%s');
+                history.back();
+            </script>
+            """.formatted(escapedMessage);
     }
 
 }
