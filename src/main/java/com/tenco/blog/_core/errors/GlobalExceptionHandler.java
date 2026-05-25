@@ -44,6 +44,30 @@ public class GlobalExceptionHandler {
             """.formatted(escapedMessage);
     }
 
+    /**
+     * 포인트 부족 예외 처리
+     *
+     * 일반 400 은 "이전 페이지로(history.back)" 보내지만,
+     * 포인트 부족은 "마이페이지로 보내 충전을 유도" 하는 게 더 자연스럽다.
+     * 그래서 location.href 로 /user/detail (마이페이지) 로 이동시킨다.
+     */
+    @ExceptionHandler(NotEnoughPointException.class)
+    @ResponseBody
+    public String handleNotEnoughPoint(NotEnoughPointException e, HttpServletRequest request) {
+        log.warn("=== 포인트 부족 예외 발생 ===");
+        log.warn("요청 URL: {}", request.getRequestURL());
+        log.warn("에러메시지: {}", e.getMessage());
+
+        String message = e.getMessage() != null ? e.getMessage() : "포인트가 부족합니다";
+        String escapedMessage = message.replace("'", "\\'");
+        return """
+            <script>
+                alert('%s');
+                location.href='/user/detail';
+            </script>
+            """.formatted(escapedMessage);
+    }
+
 //    @ExceptionHandler(Exception401.class)
 //    public String ex401(Exception401 e, HttpServletRequest request) {
 //        log.warn("=== 401 Unauthorized 에러 발생 ===");

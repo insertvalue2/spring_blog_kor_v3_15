@@ -99,5 +99,5 @@ $RECYCLE.BIN/
 *.lnk
 
 # .env 제외 처리
-.env
-.env.local
+#.env
+#.env.local
