@@ -10,6 +10,14 @@
                 <div class="mb-3">
                     <textarea type="text" name="content" rows="5" class="form-control" placeholder="enter content"></textarea>
                 </div>
+                <!-- 유료 게시글 설정 -->
+                <!-- 체크 시 premium=true 전송, 미체크 시 아무것도 안 보냄 → 서버에서 null=false 처리 -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" name="premium" value="true" class="form-check-input" id="premium">
+                    <label class="form-check-label" for="premium">
+                        유료 게시글로 등록 (다른 사용자는 열람 시 500포인트 차감)
+                    </label>
+                </div>
                 <button class="btn btn-primary">글쓰기 완료</button>
             </form>
         </div>

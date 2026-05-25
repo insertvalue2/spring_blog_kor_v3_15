@@ -121,6 +121,27 @@ public class UserService {
         return savedUser;
     }
 
+    /**
+     * 포인트 충전 (테스트용)
+     *
+     * 실무에서는 PG(결제) 연동으로 대체되지만, 학습 단계에서는 충전 금액만 받아
+     * 바로 포인트를 올려준다. 더티 체킹으로 UPDATE 가 자동 반영된다.
+     *
+     * @param userId 사용자 ID
+     * @param amount 충전할 포인트
+     * @return 포인트가 충전된 사용자 엔티티
+     */
+    @Transactional
+    public User 포인트충전(Integer userId, Integer amount) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new Exception404("사용자를 찾을 수 없습니다"));
+
+        // 포인트 충전 (amount <= 0 이면 User.chargePoint 내부에서 예외)
+        user.chargePoint(amount);
+
+        return userRepository.save(user);
+    }
+
 
     /**
      * 로그인 처리

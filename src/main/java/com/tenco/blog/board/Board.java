@@ -49,6 +49,13 @@ public class Board {
     @CreationTimestamp
     private Timestamp createdAt;
 
+    // 유료 게시글 여부 (기본값 false)
+    // @Builder.Default: @Builder 사용 시 빌더에서 값을 안 주면 필드 초기값(false)을 그대로 쓰게 함.
+    //   (이게 없으면 빌더로 만들 때 premium 이 null 로 들어감)
+    @org.hibernate.annotations.ColumnDefault("false")
+    @Builder.Default
+    private Boolean premium = false;
+
     // createdAt -> 포멧 하는 메서드 만들어 보기
     public String getTime() {
         return MyDateUtil.timestampFormat(createdAt);
@@ -59,6 +66,8 @@ public class Board {
         // this.username = updateDTO.getUsername(); 삭제 예정
         this.title = updateDTO.getTitle();
         this.content = updateDTO.getContent();
+        // 유료 여부도 함께 수정 (null 이면 false 로 보정)
+        this.premium = (updateDTO.getPremium() != null) ? updateDTO.getPremium() : false;
 
         // 더티체킹 - 변경 감지 동작 과정
         // 1. 최초 조회시 영속성 컨텍스트 1차 캐쉬에 데이터를 스냅샷으로 보관 함.

@@ -18,6 +18,14 @@
                         {{board.content}}
                     </textarea>
                 </div>
+                <!-- 유료 게시글 설정 (현재 값이 true 면 체크된 상태로 표시) -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" name="premium" value="true" class="form-check-input" id="premium"
+                           {{#board.premium}}checked{{/board.premium}}>
+                    <label class="form-check-label" for="premium">
+                        유료 게시글로 등록 (다른 사용자는 열람 시 500포인트 차감)
+                    </label>
+                </div>
                 <button class="btn btn-primary">글수정 완료</button>
             </form>
         </div>

@@ -1,5 +1,6 @@
 package com.tenco.blog.user;
 
+import com.tenco.blog._core.errors.Exception400;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -72,12 +73,17 @@ public class User {
     @ColumnDefault("'LOCAL'") // 어노테이션으로 디폴트값 선언 방법 ( 문자열 일 경우 ' ' 반드시 사용)
     private OAuthProvider oAuthProvider;
 
+    // 보유 포인트 (유료 게시글 구매에 사용) — 기본값 0
+    @ColumnDefault("0")
+    private Integer point = 0;
+
     @Builder
     public User(Integer id, String username, String password,
                 String email,
                 String profileImage,
                 OAuthProvider oAuthProvider,
-                List<UserRole> roles) {       // ← roles 매개변수 추가
+                List<UserRole> roles,
+                Integer point) {       // ← roles, point 매개변수 추가
         this.id = id;
         this.username = username;
         this.password = password;
@@ -97,6 +103,9 @@ public class User {
         // 3) oAuthProvider 가 null 이면 LOCAL 로 기본값 설정
         //    (회원가입 흐름에서 명시적으로 안 주는 경우 대비)
         this.oAuthProvider = (oAuthProvider != null) ? oAuthProvider : OAuthProvider.LOCAL;
+
+        // 4) point 가 null 이면 0 으로 기본값 설정
+        this.point = (point != null) ? point : 0;
     }
 
     // 편의 기능 추가 - 회원 정보 수정
@@ -110,6 +119,42 @@ public class User {
             // 신규 파일 생성해서 들어 옴
             this.profileImage = updateDTO.getProfileImageFileName();
         }
+    }
+
+    // ===================== 포인트 관련 편의 메서드 =====================
+
+    /**
+     * 포인트를 차감한다. (유료 게시글 구매 시)
+     * 포인트가 부족하면 Exception400 을 던져 트랜잭션을 롤백시킨다.
+     *
+     * @param amount 차감할 포인트
+     */
+    public void deductPoint(Integer amount) {
+        if (amount == null || amount <= 0) {
+            throw new Exception400("차감할 포인트는 0보다 커야 합니다");
+        }
+        if (this.point == null) {
+            this.point = 0;
+        }
+        if (this.point < amount) {
+            throw new Exception400("포인트가 부족합니다. 현재 포인트: " + this.point);
+        }
+        this.point -= amount;
+    }
+
+    /**
+     * 포인트를 충전한다. (테스트용 충전 API 에서 사용)
+     *
+     * @param amount 충전할 포인트
+     */
+    public void chargePoint(Integer amount) {
+        if (amount == null || amount <= 0) {
+            throw new com.tenco.blog._core.errors.Exception400("충전할 포인트는 0보다 커야 합니다");
+        }
+        if (this.point == null) {
+            this.point = 0;
+        }
+        this.point += amount;
     }
 
 

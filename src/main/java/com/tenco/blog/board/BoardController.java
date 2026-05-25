@@ -1,5 +1,6 @@
 package com.tenco.blog.board;
 
+import com.tenco.blog.purchase.PurchaseService;
 import com.tenco.blog.reply.ReplyResponse;
 import com.tenco.blog.reply.ReplyService;
 import com.tenco.blog.user.User;
@@ -21,6 +22,8 @@ public class BoardController {
     private final BoardService boardService;
     // 댓글 목록 조회시 필요
     private final ReplyService replyService;
+    // 유료 게시글 구매 처리
+    private final PurchaseService purchaseService;
 
     /**
      * 게시글 작성 화면 요청
@@ -80,19 +83,51 @@ public class BoardController {
     @GetMapping("/board/{id}")
     public String detailPage(@PathVariable(name = "id") Integer id, Model model, HttpSession session) {
 
-        BoardResponse.DetailDTO detailDTO = boardService.게시글상세조회(id);
-
         // 게시글 상세보기는 로그인 하지 않은 사용자도 들어올 수 있음
         User sessionUser = (User) session.getAttribute("sessionUser");
         Integer sessionUserId = sessionUser != null ? sessionUser.getId() : null;
+
+        // 구매 여부까지 포함해서 상세 조회
+        BoardResponse.DetailDTO detailDTO = boardService.게시글상세조회(id, sessionUserId);
+
+        // 소유자 여부
+        boolean isOwner = detailDTO.checkIsOwner(sessionUserId);
+
+        // 본문 열람 가능 여부 = 무료글이거나 / 이미 구매했거나 / 본인 글
+        //  Mustache 는 AND/OR 같은 논리 연산을 못 하므로, 자바에서 미리 계산해 내려준다.
+        boolean canRead = !detailDTO.getPremium() || detailDTO.getPurchased() || isOwner;
+
         List<ReplyResponse.ListDTO> replyList = replyService.댓글목록조회(id, sessionUserId);
 
         // view 에 데이터 전달
         model.addAttribute("board", detailDTO);
-        model.addAttribute("checkIsOwner", detailDTO.checkIsOwner(sessionUserId));
+        model.addAttribute("checkIsOwner", isOwner);
+        model.addAttribute("canRead", canRead);
         model.addAttribute("replyList", replyList);
 
         return "board/detail";
+    }
+
+    /**
+     * 유료 게시글 구매 요청
+     *  - 로그인 필요 (인터셉터 또는 세션 확인)
+     *  - PurchaseService 가 포인트 차감 + 구매 내역 저장을 한 트랜잭션으로 처리
+     *
+     * 주소설계 : POST http://localhost:8080/board/{id}/purchase
+     */
+    @PostMapping("/board/{id}/purchase")
+    public String purchaseProc(@PathVariable(name = "id") Integer id, HttpSession session) {
+        User sessionUser = (User) session.getAttribute("sessionUser");
+
+        // 구매 처리 → 포인트가 차감된 최신 User 를 받는다
+        User updatedUser = purchaseService.구매하기(id, sessionUser.getId());
+
+        // 세션 동기화: 세션의 sessionUser 를 최신 포인트로 갱신해야
+        // 마이페이지 등에서 차감된 포인트가 정상적으로 보인다.
+        session.setAttribute("sessionUser", updatedUser);
+
+        // 구매 후 다시 상세 페이지로 (이제 본문이 보임)
+        return "redirect:/board/" + id;
     }
 
 

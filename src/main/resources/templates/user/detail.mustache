@@ -46,6 +46,19 @@
                 <p class="form-control-plaintext">{{user.createdAt}}</p>
             </div>
 
+            <!-- 보유 포인트 + 충전 (테스트용) -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">보유 포인트</label>
+                <p class="form-control-plaintext">
+                    <span id="pointDisplay">{{user.point}}</span> P
+                </p>
+                <div class="input-group" style="max-width: 320px;">
+                    <input type="number" id="chargeAmount" class="form-control" placeholder="충전할 포인트" value="1000">
+                    <button type="button" class="btn btn-outline-success" onclick="callChargeApi()">포인트 충전</button>
+                </div>
+                <small class="form-text text-muted">테스트용 충전 (실무에서는 결제 연동)</small>
+            </div>
+
             <div class="mb-3">
                 <a href="/user/update-form" class="btn btn-primary" >회원정보 수정</a>
                 <a href="/board/list" class="btn btn-secondary" >게시글 목록</a>
@@ -55,4 +68,35 @@
     </div>
 </div>
 {{> layout/footer}}
+
+<script>
+    // 포인트 충전 API 호출 (AJAX)
+    async function callChargeApi() {
+        let amount = Number(document.querySelector("#chargeAmount").value);
+        if (!amount || amount <= 0) {
+            alert("충전할 포인트를 올바르게 입력해주세요.");
+            return;
+        }
+
+        try {
+            let response = await fetch("/api/point/charge", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ amount: amount })
+            });
+
+            let result = await response.json();
+            if (response.ok) {
+                // 충전된 최신 포인트로 화면 갱신
+                document.querySelector("#pointDisplay").innerText = result.point;
+                alert(result.message + " (현재 " + result.point + "P)");
+            } else {
+                alert("실패: " + (result.message || "포인트 충전 실패"));
+            }
+        } catch (e) {
+            console.log(e);
+            alert("서버 통신 오류: " + e.message);
+        }
+    }
+</script>
 

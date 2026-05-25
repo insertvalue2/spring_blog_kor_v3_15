@@ -2,6 +2,7 @@ package com.tenco.blog.board;
 
 import com.tenco.blog._core.errors.Exception403;
 import com.tenco.blog._core.errors.Exception404;
+import com.tenco.blog.purchase.PurchaseService;
 import com.tenco.blog.reply.ReplyRepository;
 import com.tenco.blog.reply.ReplyResponse;
 import com.tenco.blog.user.User;
@@ -43,6 +44,7 @@ public class BoardService {
 
     private final BoardRepository boardRepository;
     private final ReplyRepository replyRepository;
+    private final PurchaseService purchaseService;
 //    /**
 //     * 게시글 목록 조회
 //     * OSIV false 환경 대응 - 응답 DTO 설계
@@ -94,6 +96,28 @@ public class BoardService {
                 boardEntity.getTitle(), boardEntity.getUser().getUsername());
 
         return new BoardResponse.DetailDTO(boardEntity);
+    }
+
+    /**
+     * 게시글 상세 조회 (구매 여부 포함)
+     *
+     * 유료 게시글 화면에서 "현재 로그인 사용자가 이 글을 구매했는가" 를 함께 담아 반환한다.
+     *
+     * @param id            (Board PK)
+     * @param sessionUserId 로그인한 사용자 ID (비로그인 시 null)
+     * @return 구매 여부가 채워진 DetailDTO
+     */
+    public BoardResponse.DetailDTO 게시글상세조회(Integer id, Integer sessionUserId) {
+        log.info("게시글 상세 조회 서비스 (구매 여부 포함)");
+        Board boardEntity = boardRepository.findByIdJoinUser(id).orElseThrow(() -> {
+            log.warn("게시글 조회 실패 - ID: {}", id);
+            return new Exception404("해당하는 게시글을 찾을 수 없습니다");
+        });
+
+        // 구매 여부 확인 (로그인 사용자가 있을 때만 의미 있음, null 이면 false)
+        boolean purchased = purchaseService.구매여부확인(sessionUserId, id);
+
+        return new BoardResponse.DetailDTO(boardEntity, purchased);
     }
 
 

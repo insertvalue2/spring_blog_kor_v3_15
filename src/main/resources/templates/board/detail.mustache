@@ -18,11 +18,38 @@
 
     <!-- 게시글 내용 섹션 -->
     <div>
-        <h2><b>{{board.title}}</b></h2>
+        <h2>
+            <b>{{board.title}}</b>
+            {{#board.premium}}
+                <span class="badge bg-warning text-dark">유료</span>
+            {{/board.premium}}
+        </h2>
         <hr />
-        <div class="m-4 p-2">
-            {{board.content}}
-        </div>
+
+        <!-- canRead = 무료글이거나 / 이미 구매했거나 / 본인 글 (Controller 에서 미리 계산) -->
+        {{#canRead}}
+            <div class="m-4 p-2">
+                {{board.content}}
+            </div>
+        {{/canRead}}
+
+        {{^canRead}}
+            <!-- 유료 게시글인데 아직 구매 안 한 경우: 본문 가리고 구매 안내 -->
+            <div class="m-4 p-4 text-center border rounded bg-light">
+                <p class="text-muted mb-3">
+                    유료 게시글입니다. 구매 후 전체 내용을 열람할 수 있습니다. (500 포인트)
+                </p>
+                {{#sessionUser}}
+                    <form action="/board/{{board.id}}/purchase" method="post"
+                          onsubmit="return confirm('500 포인트로 이 게시글을 구매하시겠습니까?')">
+                        <button type="submit" class="btn btn-primary">구매하기 (500P)</button>
+                    </form>
+                {{/sessionUser}}
+                {{^sessionUser}}
+                    <a href="/login-form" class="btn btn-outline-primary">로그인 후 구매</a>
+                {{/sessionUser}}
+            </div>
+        {{/canRead}}
     </div>
 
     <!-- 댓글 섹션 시작 -->

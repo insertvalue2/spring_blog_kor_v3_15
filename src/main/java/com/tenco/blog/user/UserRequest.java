@@ -114,4 +114,21 @@ public class UserRequest {
         }
     }
 
+    /**
+     * 포인트 충전 DTO (테스트용)
+     *
+     * 실무에서는 PG(결제) 연동으로 대체되지만, 학습 단계에서는
+     * AJAX 로 충전 금액만 받아 바로 포인트를 올려주는 테스트 API 에 사용한다.
+     */
+    @Data
+    public static class PointChargeDTO {
+        private Integer amount;  // 충전할 포인트
+
+        public void validate() {
+            if (amount == null || amount <= 0) {
+                throw new IllegalArgumentException("충전할 포인트는 0보다 커야 합니다");
+            }
+        }
+    }
+
 }

@@ -48,15 +48,25 @@ public class BoardResponse {
         private String username;
         private Integer userId; //  user PK
         private boolean isOwner;
+        private Boolean premium;    // 유료 게시글 여부
+        private Boolean purchased;  // 현재 사용자의 구매 여부
 
         public DetailDTO(Board board) {
             this.id = board.getId();
             this.title = board.getTitle();
             this.content = board.getContent();
+            this.premium = (board.getPremium() != null) ? board.getPremium() : false;
+            this.purchased = false; // 기본값 (구매 안 함)
             if(board.getUser() != null) {
                 this.username = board.getUser().getUsername();
                 this.userId = board.getUser().getId();
             }
+        }
+
+        // 구매 여부까지 받는 생성자 (Service 에서 구매여부 확인 후 사용)
+        public DetailDTO(Board board, boolean purchased) {
+            this(board);
+            this.purchased = purchased;
         }
 
         // 소유자 확인
